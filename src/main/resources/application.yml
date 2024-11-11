@@ -7,10 +7,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop # create, update, create-drop, validate
-    show-sql: true # Set to false in production
-    properties:
-      hibernate:
-        format_sql: true
+    show-sql: false # Set to false in production
     database-platform: org.hibernate.dialect.PostgreSQLDialect
   batch:
     jdbc:

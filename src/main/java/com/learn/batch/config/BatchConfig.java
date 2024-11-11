@@ -14,6 +14,8 @@ import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.learn.batch.entity.Student;
@@ -29,8 +31,8 @@ public class BatchConfig {
 	private final PlatformTransactionManager manager;
 	private final StudentRepository studentRepository;
 
-	@Bean
-	FlatFileItemReader<Student> itemReader() {
+    @Bean
+    FlatFileItemReader<Student> itemReader() {
 		FlatFileItemReader<Student> itemReader = new FlatFileItemReader<>();
 		itemReader.setResource(new FileSystemResource("src/main/resources/flies/students.csv"));
 		itemReader.setName("csvReader");
@@ -54,8 +56,8 @@ public class BatchConfig {
 
 	@Bean
 	Step importStep() {
-		return new StepBuilder("csvImport", jobRepository).<Student, Student>chunk(10, manager).reader(itemReader())
-				.processor(processor()).writer(writer()).build();
+		return new StepBuilder("csvImport", jobRepository).<Student, Student>chunk(100, manager).reader(itemReader())
+				.processor(processor()).writer(writer()).taskExecutor(taskExecutor()).build();
 	}
 
 	@Bean
@@ -63,6 +65,13 @@ public class BatchConfig {
 		return new JobBuilder("importStudent", jobRepository).start(importStep()).build();
 	}
 
+	@Bean
+	TaskExecutor taskExecutor() {
+		SimpleAsyncTaskExecutor asyncTaskExecutor = new SimpleAsyncTaskExecutor();
+		asyncTaskExecutor.setConcurrencyLimit(10);
+		return asyncTaskExecutor;
+	}
+	
 	private LineMapper<Student> lineMapper() {
 		DefaultLineMapper<Student> lineMapper = new DefaultLineMapper<>();
 
